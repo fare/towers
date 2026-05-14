@@ -1,8 +1,9 @@
-{-# OPTIONS --safe #-}
-module Cubical.Experiments.Implementation where
+module Towers.Implementation where
 
 open import Cubical.Foundations.Prelude
-import Cubical.Foundations.Isomorphism as Iso
+--import Cubical.Foundations.Isomorphism as Iso
+import Cubical.Categories.Bifunctor as Bifunctor
+
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function hiding (_∘_)
@@ -20,7 +21,7 @@ open import Cubical.Categories.Isomorphism
 open import Cubical.Categories.Morphism
 open import Cubical.Categories.Functor.Base
 
-open import Cubical.Categories.Constructions.FullSubcategory
+open import Cubical.Categories.Instances.FullSubcategory
 
 private
   variable
@@ -59,7 +60,7 @@ module _ {ℓP ℓP' ℓP'' ℓa} (A : Category ℓ ℓ') (C : Category ℓ'' �
    isObservable : Category.ob C → Type ℓP
    isSimpleA-hom : A.Hom[ a , a' ] → Type ℓP'
    isSimpleC-hom : C.Hom[ c , c' ] → Type ℓP''
-      
+
 
 
   O : Category (ℓ-max ℓ'' ℓP) ℓ'''
@@ -73,17 +74,17 @@ module _ {ℓP ℓP' ℓP'' ℓa} (A : Category ℓ ℓ') (C : Category ℓ'' �
 
   private
     variable
-      o o' o'' : O.ob 
+      o o' o'' : O.ob
 
 
 
   record IsCompleteImpl : Type ((ℓ-max (ℓ-max ℓ ℓ')
             (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓP''))) ) ))  where
    field
-    isCompleteImpl : 
+    isCompleteImpl :
      (h : A.Hom[ Φ ⟅ o ⟆  , a' ]) → isSimpleA-hom h →
         Σ[ o' ∈ O.ob  ]
-        Σ[ g ∈ O.Hom[ o , o' ] ] (isSimpleC-hom g × 
+        Σ[ g ∈ O.Hom[ o , o' ] ] (isSimpleC-hom g ×
        (Σ[ p ∈ Φ ⟅ o' ⟆ ≡ a' ] PathP (λ i → A.Hom[ Φ ⟅ o ⟆ , p i ]) (Φ ⟪ g ⟫)  h ))
 
 
@@ -94,14 +95,14 @@ module _ {ℓP ℓP' ℓP'' ℓa} (A : Category ℓ ℓ') (C : Category ℓ'' �
      isObservable c →
       Σ[ c'' ∈ C.ob ]
       Σ[ g   ∈ C.Hom[ c' , c'' ]
-        ] isObservable c'' × isSimpleC-hom g 
+        ] isObservable c'' × isSimpleC-hom g
 
 
 
   record IsLivenessImpl : Type ((ℓ-max (ℓ-max ℓ ℓ')
             (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓa))) ) )) where
     field
-     advancementA : Advancement A ℓa 
+     advancementA : Advancement A ℓa
      advancementC : Advancement C ℓa
 
     module advA = Advancement advancementA
@@ -116,4 +117,4 @@ module _ {ℓP ℓP' ℓP'' ℓa} (A : Category ℓ ℓ') (C : Category ℓ'' �
        Σ[ isObs-c'' ∈ isObservable c'' ]
        Σ[ f' ∈ C.Hom[ c , c'' ] ]
        Σ[ g ∈ C.Hom[ c'' , c' ] ]
-       advA.isAdvancing (Functor.F-hom Φ {_ , isObs-c} {_ , isObs-c''}  f')  
+       advA.isAdvancing (Functor.F-hom Φ {_ , isObs-c} {_ , isObs-c''}  f')
