@@ -29,8 +29,6 @@ import Cubical.WildCat.Base as WC
 private
   variable
     ℓ ℓ' ℓ'' ℓ''' : Level
---     B C D E : Category ℓ ℓ'
-
 
 
 record Advancement (A : Category ℓ ℓ') ℓa : Type (ℓ-max (ℓ-suc ℓa) (ℓ-max ℓ ℓ')) where
@@ -52,14 +50,11 @@ module Impl {ℓa ℓP ℓP' ℓP''} (A : Category ℓ ℓ') (C : Category ℓ''
  module A = Category A
  module C = Category C
 
-
  private
    variable
      a a' a'' : A.ob
      c c' c'' : C.ob
 
- 
- 
 
  record Implementation : Type (ℓ-max (ℓ-max ℓ ℓ')
             (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓP''))) ) ) where
@@ -68,7 +63,6 @@ module Impl {ℓa ℓP ℓP' ℓP''} (A : Category ℓ ℓ') (C : Category ℓ''
    isObservable : Category.ob C → Type ℓP
    isSimpleA-hom : A.Hom[ a , a' ] → Type ℓP'
    isSimpleC-hom : C.Hom[ c , c' ] → Type ℓP''
-
 
 
   O : Category (ℓ-max ℓ'' ℓP) ℓ'''
@@ -85,30 +79,28 @@ module Impl {ℓa ℓP ℓP' ℓP''} (A : Category ℓ ℓ') (C : Category ℓ''
       o o' o'' : O.ob
 
 
-
-  record IsCompleteImpl : Type ((ℓ-max (ℓ-max ℓ ℓ')
-            (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓP''))) ) ))  where
+  record IsComplete : Type ((ℓ-max (ℓ-max ℓ ℓ')
+            (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓP'')))))) where
    field
-    isCompleteImpl :
+    proof :
      (h : A.Hom[ Φ ⟅ o ⟆  , a' ]) → isSimpleA-hom h →
-        Σ[ o' ∈ O.ob  ]
+        Σ[ o' ∈ O.ob ]
         Σ[ g ∈ O.Hom[ o , o' ] ] (isSimpleC-hom g ×
-       (Σ[ p ∈ Φ ⟅ o' ⟆ ≡ a' ] PathP (λ i → A.Hom[ Φ ⟅ o ⟆ , p i ]) (Φ ⟪ g ⟫)  h ))
+       (Σ[ p ∈ Φ ⟅ o' ⟆ ≡ a' ] PathP (λ i → A.Hom[ Φ ⟅ o ⟆ , p i ]) (Φ ⟪ g ⟫) h))
 
 
-  record IsObservableImpl : Type ((ℓ-max (ℓ-max ℓ ℓ')
-            (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓP''))) ) )) where
+  record IsObservable : Type ((ℓ-max (ℓ-max ℓ ℓ')
+            (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓP'')))))) where
    field
-    isObservableImpl : (f : C.Hom[ c , c' ]) →
+    proof : (f : C.Hom[ c , c' ]) →
      isObservable c →
       Σ[ c'' ∈ C.ob ]
       Σ[ g   ∈ C.Hom[ c' , c'' ]
         ] isObservable c'' × isSimpleC-hom g
 
 
-
-  record IsLivenessImpl : Type ((ℓ-max (ℓ-max ℓ ℓ')
-            (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓa))) ) )) where
+  record IsLive : Type ((ℓ-max (ℓ-max ℓ ℓ')
+            (ℓ-max (ℓ-max ℓ'' ℓ''') (ℓ-suc (ℓ-max ℓP (ℓ-max ℓP' ℓa)))))) where
     field
      advancementA : Advancement A ℓa
      advancementC : Advancement C ℓa
@@ -117,7 +109,7 @@ module Impl {ℓa ℓP ℓP' ℓP''} (A : Category ℓ ℓ') (C : Category ℓ''
     module advC = Advancement advancementC
 
     field
-     isLivenessImpl :
+     proof :
        ∀ (f : C.Hom[ c , c' ]) →
        advC.isAdvancing f →
        (isObs-c : isObservable c) →
@@ -127,15 +119,15 @@ module Impl {ℓa ℓP ℓP' ℓP''} (A : Category ℓ ℓ') (C : Category ℓ''
        Σ[ g ∈ C.Hom[ c'' , c' ] ]
        advA.isAdvancing (Functor.F-hom Φ {_ , isObs-c} {_ , isObs-c''}  f')
 
- open Implementation using (IsCompleteImpl)
+
+ open Implementation using (IsComplete)
 
  CompleteImplementation : Type _
- CompleteImplementation = Σ _ IsCompleteImpl
+ CompleteImplementation = Σ _ IsComplete
 
 private
  variable
   A A' A'' : Category ℓ ℓ
-
 
 
 module _ {ℓ} where
@@ -149,12 +141,11 @@ module _ {ℓ} where
   IdImpl A .Impl.Implementation.isSimpleC-hom _ = Unit*
   IdImpl A .Impl.Implementation.Φ = FullInclusion _ _
 
-  _I∘_ : Implementation A A' → Implementation A' A'' → Implementation A A'' 
+  _I∘_ : Implementation A A' → Implementation A' A'' → Implementation A A''
   _I∘_ {A} {A'} {A''} I₀  I₁ = I₀∘I₁
    where
    module I₀ = Implementation I₀
    module I₁ = Implementation I₁
-
 
 
    I₀∘I₁ : Implementation _ _
@@ -168,9 +159,9 @@ module _ {ℓ} where
      ∙ I₀.Φ .Functor.F-id
    I₀∘I₁ .Impl.Implementation.Φ .Functor.F-seq f g =
      cong (I₀.Φ .Functor.F-hom) (I₁.Φ .Functor.F-seq _ _) ∙ I₀.Φ .Functor.F-seq _ _
-     
- module WildCatOfImplementations where
 
+
+ module WildCatOfImplementations where
 
  WildCatOfImplementations : WildCat (ℓ-suc ℓ) (ℓ-suc ℓ)
  WildCatOfImplementations .WildCat.ob = Category ℓ ℓ
