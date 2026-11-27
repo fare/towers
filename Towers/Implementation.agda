@@ -23,8 +23,6 @@ open import Cubical.Categories.Morphism
 open import Cubical.Categories.Functor.Base
 open import Cubical.Categories.Instances.EssentialImage
 open import Cubical.Categories.Instances.FullSubcategory
-open import Cubical.WildCat.Base using (WildCat) renaming (_[_,_] to _[_,_]𝒘) 
-import Cubical.WildCat.Base as WC
 
 private
   variable
@@ -144,8 +142,8 @@ module _ {ℓ} where
   _I∘_ : Implementation A A' → Implementation A' A'' → Implementation A A''
   _I∘_ {A} {A'} {A''} I₀  I₁ = I₀∘I₁
    where
-   module I₀ = Implementation I₀
-   module I₁ = Implementation I₁
+   module I₀ = Implementation _ _ I₀
+   module I₁ = Implementation _ _ I₁
 
 
    I₀∘I₁ : Implementation _ _
@@ -161,16 +159,43 @@ module _ {ℓ} where
      cong (I₀.Φ .Functor.F-hom) (I₁.Φ .Functor.F-seq _ _) ∙ I₀.Φ .Functor.F-seq _ _
 
 
- module WildCatOfImplementations where
+ module Composition {A A' A'' : Category ℓ ℓ} (I₀ : Implementation A A') (I₁ : Implementation A' A'') where
+  module U = Implementation _ _ I₀
+  module L = Implementation _ _ I₁
+  module T = Implementation _ _ (I₀ I∘ I₁)
 
- WildCatOfImplementations : WildCat (ℓ-suc ℓ) (ℓ-suc ℓ)
- WildCatOfImplementations .WildCat.ob = Category ℓ ℓ
- WildCatOfImplementations .WildCat.Hom[_,_] = Implementation
- WildCatOfImplementations .WildCat.id = IdImpl _
- WildCatOfImplementations .WildCat._⋆_ = _I∘_
- WildCatOfImplementations .WildCat.⋆IdL = {!!}
- WildCatOfImplementations .WildCat.⋆IdR = {!!}
- WildCatOfImplementations .WildCat.⋆Assoc = {!!}
+  MiddleCompatible = ∀ {x y} (u : A' [ x , y ]) →
+    U.isSimpleC-hom u → L.isSimpleA-hom u
 
- -- _CI∘_ : CompleteImplementation A A' → CompleteImplementation A' A'' → CompleteImplementation A A''
- -- (I₀ , CI₀) CI∘ (I₁ , CI₁) = {!!}
+  BottomClosed = ∀ {x y z} (s : A'' [ x , y ]) (t : A'' [ y , z ]) →
+    L.isSimpleC-hom s → L.isSimpleC-hom t → L.isSimpleC-hom (s ⋆⟨ A'' ⟩ t)
+
+  observable-compose : MiddleCompatible → BottomClosed →
+    U.IsObservable → L.IsObservable → L.IsComplete → T.IsObservable
+  T.IsObservable.proof (observable-compose compatible closed upper lower lower-complete) f (lo , up)
+    with L.IsObservable.proof lower f lo
+  ... | y , s , ly , simple-s
+    with U.IsObservable.proof upper
+           (Functor.F-hom L.Φ {_ , lo} {y , ly} (f ⋆⟨ A'' ⟩ s)) up
+  ... | z , u , uz , simple-u
+    with L.IsComplete.proof lower-complete {o = y , ly} u (compatible u simple-u)
+  ... | (w , lw) , k , simple-k , p , _ =
+    w , (s ⋆⟨ A'' ⟩ k) , (lw , subst U.isObservable (sym p) uz) , closed s k simple-s simple-k
+
+  complete-compose : MiddleCompatible → U.IsComplete → L.IsComplete → T.IsComplete
+  T.IsComplete.proof (complete-compose compatible upper lower) {o = x , lx , ux} {a' = a} h sh
+    with U.IsComplete.proof upper {o = _ , ux} h sh
+  ... | (z , uz) , u , su , p , pu
+    with L.IsComplete.proof lower {o = x , lx} u (compatible u su)
+  ... | (y , ly) , k , sk , q , qu =
+    (y , ly , uy) , k , sk , eq
+    where
+    -- Transport the upper witness along the equality of endpoint/arrow pairs.
+    Witness : (Σ[ b ∈ Category.ob A' ] A' [ L.Φ ⟅ x , lx ⟆ , b ]) → Type _
+    Witness (b , v) = Σ[ ub ∈ U.isObservable b ]
+      Σ[ r ∈ U.Φ ⟅ b , ub ⟆ ≡ a ]
+        PathP (λ i → A [ U.Φ ⟅ _ , ux ⟆ , r i ])
+              (Functor.F-hom U.Φ {_ , ux} {b , ub} v) h
+    recovered = subst Witness (λ i → q (~ i) , qu (~ i)) (uz , p , pu)
+    uy = recovered .fst
+    eq = recovered .snd
